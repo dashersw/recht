@@ -1,0 +1,50 @@
+{
+  "name": "recht",
+  "version": "1.0.0",
+  "description": "A concise rule engine to express and enforce rules for selections, permissions and the like",
+  "main": "index.js",
+  "scripts": {
+    "coverage": "nyc report",
+    "test": "nyc ava --verbose",
+    "lint": "eslint .",
+    "lint-fix": "eslint --fix .",
+    "prepublish": "npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dashersw/recht.git"
+  },
+  "keywords": [
+    "rule set",
+    "decision making",
+    "acl",
+    "access control"
+  ],
+  "author": {
+    "name": "Armagan Amcalar",
+    "email": "armagan@amcalar.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dashersw/recht/issues"
+  },
+  "homepage": "https://github.com/dashersw/recht#readme",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "coveralls": "^3.0.2",
+    "eslint": "^5.0.1",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-standard": "^3.1.0",
+    "nyc": "^12.0.2"
+  },
+  "eslintConfig": {
+    "extends": "standard",
+    "rules": {
+      "eqeqeq": "off"
+    }
+  },
+  "dependencies": {}
+}
