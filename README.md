@@ -67,6 +67,20 @@ recht.rules = [
 ]
 ```
 
+### Checks
+
+Once you define your rules, you can check any condition against them with the `check` method. The following example checks if the `'Developer'` can `'push'` to `'master'`.
+```js
+recht.check('Developer', 'push', 'master')
+```
+
+If you are only interested whether a `'Developer'` can push to any branch at all, you can omit the last argument and call the `check` function with only two arguments as the following:
+```js
+recht.check('Developer', 'push')
+```
+
+This feature is useful for checking group matches or hierarchical structures. It assumes the rest of the arguments can be of any value. If you wish to keep one of the latter arguments, but use the any value mechanism in one of the earlier arguments, you can use [wildcards][#wildcards].
+
 ### Wildcards
 Recht accepts `'*'` as a wildcard condition. In this case, any value for that condition will be accepted as a match. The following example gives anybody clone access to any branch.
 
@@ -137,13 +151,13 @@ recht.closest('Guest', 'Mon', 'Sauna') // 'Wed'
 recht.closest('Guest', 'Mon', 'Sauna', facilities) // 'Swimming pool'
 ```
 
-In this example, Guests can't use the `Sauna` on `Mon`, therefore the check fails. Recht assumes that the last dimension, although the final chain in the hierarchy, is the stationary choice when we are looking for alternatives. Therefore, when invoked with the same parameters, `closest` gives us `Wed`, which is the next day a `Guest` can use the `Sauna`.
+In this example, Guests can't use the `Sauna` on `Mon`, therefore the check fails. Recht assumes that the last dimension, although the final chain in the hierarchy, is the stationary choice when we are looking for alternatives. Therefore, when invoked with the same arguments, `closest` gives us `Wed`, which is the next day a `Guest` can use the `Sauna`.
 
 If we would like to start the search for the closest alternative from the last dimension (i.e, facilities), we can do so by indicating which dimension we want the `closest` search to start from. This happens as a result of passing the dimension as the last argument to the `closest` call. Notice that `closest` takes advantage of references, therefore the dimension that we pass in as the last argument to the `closest` call has to be a member of the original `dimensions` array.
 
 In this case, the answer will be `Swimming pool`. This means that if a `Guest` is looking for alternatives that they can use on `Mon` only, they can use the `Swimming pool`.
 
-Since the last parameter can be any dimension, one last example question we can ask `Recht` is the following: "What kind of a membership do I need in order to be able to use the `Sauna` on `Mon`?" This call is as follows:
+Since the last argument can be any dimension, one last example question we can ask `Recht` is the following: "What kind of a membership do I need in order to be able to use the `Sauna` on `Mon`?" This call is as follows:
 
 
 ```js
