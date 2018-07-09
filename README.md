@@ -12,7 +12,7 @@
 const recht = new Recht()
 recht.rules = [
   ['DENY', 'T-shirts', 'S', ['Black', 'Blue']],
-  ['DENY', 'T-shirts', ['M', 'L'], ['Black'] ],
+  ['DENY', 'T-shirts', ['M', 'L'], 'Black'],
   ['ALLOW', 'T-shirts', '*', '*']
 ]
 
@@ -60,7 +60,7 @@ const Recht = require('recht')
 const recht = new Recht()
 
 recht.rules = [
-  ['ALLOW', ['Master', 'Developer'], ['push'], '*'], // allow masters & developers to push to any branch
+  ['ALLOW', ['Master', 'Developer'], 'push', '*'], // allow masters & developers to push to any branch
   ['ALLOW', 'Master', 'force push', 'master'], // allow masters to force push to the master branch
   ['DENY', 'QA', 'clone', 'production'], // disallow QA from cloning production
   ['ALLOW', '*', 'clone'], // allow anyone to clone any branch
