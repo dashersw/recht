@@ -41,8 +41,9 @@ class Recht {
     if (i == -1) return this.closest(...args, this.dimensions[this.dimensions.length - 2])
 
     for (let v of dimension) {
-      args[i] = v
-      if (this.check(...args)) return v
+      const argsCopy = args.slice()
+      argsCopy[i] = v
+      if (this.check(...argsCopy)) return v
     }
 
     if (i == 0) return null
