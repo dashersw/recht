@@ -1,6 +1,6 @@
 {
   "name": "recht",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A concise rule engine to express and enforce rules for selections, permissions and the like",
   "main": "index.js",
   "scripts": {
