@@ -1,136 +1,149 @@
 import test from 'ava'
 import Recht from '..'
+import fixture from './helpers/fixture'
 
 test.beforeEach(t => {
   t.context.recht = new Recht()
 })
 
 test('Allows a rule', t => {
-  t.context.recht.rules = [
+  const rules = t.context.recht.rules = [
     ['ALLOW', 'x']
   ]
 
   t.true(t.context.recht.check('x'))
+  t.true(Recht.check({ rules }, 'x'))
 })
 
 test('Allows wildcard rules', t => {
-  t.context.recht.rules = [
+  const rules = t.context.recht.rules = [
     ['ALLOW', '*']
   ]
 
   t.true(t.context.recht.check('x'))
+  t.true(Recht.check({ rules }, 'x'))
 })
 
 test('Denies wildcard rules', t => {
-  t.context.recht.rules = [
+  const rules = t.context.recht.rules = [
     ['DENY', '*']
   ]
 
   t.false(t.context.recht.check('x'))
+  t.false(Recht.check({ rules }, 'x'))
 })
 
 test('With dimensions, denies a condition out of dimensions even though wildcard is used', t => {
-  t.context.recht.rules = [
+  const rules = t.context.recht.rules = [
     ['ALLOW', '*']
   ]
 
-  t.context.recht.dimensions = [
+  const dimensions = t.context.recht.dimensions = [
     ['x', 'y']
   ]
 
   t.false(t.context.recht.check('z'))
+  t.false(Recht.check({ rules, dimensions }, 'z'))
 })
 
 test('Denies a rule', t => {
-  t.context.recht.rules = [
+  const rules = t.context.recht.rules = [
     ['DENY', 'x']
   ]
 
   t.false(t.context.recht.check('x'))
+  t.false(Recht.check({ rules }, 'x'))
 })
 
 test('Rule order defines priority', t => {
-  t.context.recht.rules = [
+  let rules = t.context.recht.rules = [
     ['DENY', 'x'],
     ['ALLOW', 'x']
   ]
 
   t.false(t.context.recht.check('x'))
 
-  t.context.recht.rules = [
+  rules = t.context.recht.rules = [
     ['ALLOW', 'x'],
     ['DENY', 'x']
   ]
 
   t.true(t.context.recht.check('x'))
+  t.true(Recht.check({ rules }, 'x'))
 })
 
 test('Denies a condition outside of ruleset', t => {
-  t.context.recht.rules = [
+  const rules = t.context.recht.rules = [
     ['ALLOW', 'x']
   ]
 
   t.false(t.context.recht.check('y'))
+  t.false(Recht.check({ rules }, 'y'))
 })
 
 test('Performs a rule set', t => {
-  const categories = ['Men', 'Women', 'Kids']
-  const garments = ['Shirts', 'Jackets']
-  const sizes = ['XS', 'S', 'M', 'L', 'XL']
-  const colors = ['Brown', 'Black', 'Green', 'White']
-  t.context.recht.dimensions = [categories, garments, sizes, colors]
+  const { dimensions, rules, checkAssertions, closestAssertions } = fixture
+  t.context.recht.dimensions = dimensions
+  t.context.recht.rules = rules
 
-  t.context.recht.rules = [
-    ['DENY', 'Men', '*', 'XS'],
-    ['DENY', '*', '*', '*', 'Brown'],
-    ['DENY', ['Women', 'Kids'], '*', 'XL'],
-    ['ALLOW', 'Kids', '*', '*', ['Black']],
-    ['ALLOW', ['Women', 'Men'], '*', '*', ['Green', 'White']],
-    ['DENY', 'Men', 'Shirts', ['S', 'M'], 'Black'],
-    ['ALLOW', 'Men', 'Shirts', ['L', 'XL'], 'Black'],
-    ['ALLOW', 'Men', 'Jackets', ['S', 'XL'], 'Black']
-  ]
-
-  const checkAssertions = [
-    [['Men', 'Shirts', 'XS', 'Black'], false],
-    [['Men', 'Shirts', 'S', 'Black'], false],
-    [['Men', 'Shirts', 'S', 'Green'], true],
-    [['Women', 'Jackets', 'XL'], false],
-    [['Women', 'Shirts', 'L', 'White'], true],
-    [['Women', 'Jackets', 'S', 'Green'], true],
-    [['Kids', 'Shirts', 'XL'], false],
-    [['Kids', 'Shirts'], true],
-    [['Kids', 'Jackets', 'M', 'Green'], false],
-    [['Kids', 'Shirts', 'M', 'Black'], true]
-  ]
-
-  const closestAssertions = [
-    [['Men', 'Shirts', 'S', 'Black'], 'L'],
-    [['Men', 'Shirts', 'S', 'Black', colors], 'Green'],
-    [['Men', 'Shirts', 'S', 'Black', garments], 'Jackets'],
-    [['Women', 'Jackets', 'XL', 'Green'], 'XS'],
-    [['Women', 'Jackets', 'XL', 'Green', categories], 'Men'],
-    [['Women', 'Shirts', 'XL', 'Black'], 'Men'],
-    [['Kids', 'Jackets', 'S', 'Brown'], null]
-  ]
-
-  checkAssertions.forEach(([assertion, expected]) => {
-    t.is(t.context.recht.check(...assertion), expected)
+  checkAssertions.forEach(({ input, expected }) => {
+    t.is(t.context.recht.check(...input), expected.value)
+    t.is(Recht.check({ rules, dimensions }, ...input), expected.value)
   })
 
-  closestAssertions.forEach(([assertion, expected]) => {
-    t.is(t.context.recht.closest(...assertion), expected)
+  closestAssertions.forEach(({ input, expected }) => {
+    t.deepEqual(t.context.recht.closest(...input), expected.conditions)
+    t.deepEqual(Recht.closest({ rules, dimensions }, ...input), expected.conditions)
+
+    t.is(t.context.recht.closestValue(...input), expected.value)
+    t.is(Recht.closestValue({ rules, dimensions }, ...input), expected.value)
+
+    let result = t.context.recht.closestVerbose(...input)
+    t.deepEqual(result, expected)
+
+    result = Recht.closestVerbose({ rules, dimensions }, ...input)
+    t.deepEqual(result, expected)
   })
 })
 
-test('Throws if a rule has an unkown direction', t => {
-  t.context.recht.rules = [['LET', '*']]
-  const err = t.throws(() => t.context.recht.check('test'))
+test('Check throws if no rules are set', t => {
+  let err = t.throws(() => t.context.recht.check('test'))
+  t.is(err.message, 'Please provide a rules array in order to use the check method.')
+
+  err = t.throws(() => Recht.check(undefined, 'test'))
+  t.is(err.message, 'Please provide a rules array in order to use the check method.')
+})
+
+test('Check throws if no conditions are given', t => {
+  const rules = t.context.recht.rules = [['ALLOW', '*']]
+
+  let err = t.throws(() => t.context.recht.check())
+  t.is(err.message, 'Please provide conditions as arguments to the check call.')
+
+  err = t.throws(() => Recht.check({ rules }))
+  t.is(err.message, 'Please provide conditions as arguments to the check call.')
+})
+
+test('Check throws if a rule has an unkown direction', t => {
+  const rules = t.context.recht.rules = [['LET', '*']]
+  let err = t.throws(() => t.context.recht.check('test'))
+  t.is(err.message, 'Unknown action LET in rule "*" at index 0.')
+
+  err = t.throws(() => Recht.check({ rules }, 'test'))
   t.is(err.message, 'Unknown action LET in rule "*" at index 0.')
 })
 
-test('Throws if no dimensions are set', t => {
-  t.context.recht.rules = [['ALLOW', '*']]
-  const err = t.throws(() => t.context.recht.closest('test'))
+test('Closest throws if no dimensions are set', t => {
+  let err = t.throws(() => t.context.recht.closest('test'))
   t.is(err.message, 'Please provide a dimensions array in order to use the closest method.')
+
+  err = t.throws(() => Recht.closest('test'))
+  t.is(err.message, 'Please provide a dimensions array in order to use the closest method.')
+})
+
+test('Closest functions throw if no dimensions are set', t => {
+  [Recht.closest, Recht.closestValue, Recht.closestVerbose].forEach(fn => {
+    let err = t.throws(() => fn())
+    t.is(err.message, 'Please provide a dimensions array in order to use the closest method.')
+  })
 })

@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "coverage": "nyc report",
-    "test": "nyc ava --verbose",
+    "test": "nyc --check-coverage --lines 100 ava --verbose",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
-    "prepublish": "npm run lint"
+    "prepublishOnly": "npm run lint"
   },
+  "precommit": ["lint", "test"],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dashersw/recht.git"
@@ -32,13 +33,14 @@
   "devDependencies": {
     "ava": "^0.25.0",
     "coveralls": "^3.0.2",
-    "eslint": "^5.0.1",
-    "eslint-config-standard": "^11.0.0",
+    "eslint": "^5.1.0",
+    "eslint-config-standard": "^12.0.0-alpha.0",
     "eslint-plugin-import": "^2.13.0",
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.8.0",
     "eslint-plugin-standard": "^3.1.0",
-    "nyc": "^12.0.2"
+    "nyc": "^12.0.2",
+    "pre-commit": "^1.2.2"
   },
   "eslintConfig": {
     "extends": "standard",

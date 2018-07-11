@@ -147,8 +147,8 @@ recht.rules = [
 ]
 
 recht.check('Guest', 'Mon', 'Sauna') // false
-recht.closest('Guest', 'Mon', 'Sauna') // 'Wed'
-recht.closest('Guest', 'Mon', 'Sauna', facilities) // 'Swimming pool'
+recht.closest('Guest', 'Mon', 'Sauna') // ['Guest, 'Wed', 'Sauna']
+recht.closest('Guest', 'Mon', 'Sauna', facilities) // ['Guest', 'Mon', 'Swimming pool']
 ```
 
 In this example, Guests can't use the `Sauna` on `Mon`, therefore the check fails. Recht assumes that the last dimension, although the final chain in the hierarchy, is the stationary choice when we are looking for alternatives. Therefore, when invoked with the same arguments, `closest` gives us `Wed`, which is the next day a `Guest` can use the `Sauna`.
@@ -159,12 +159,155 @@ In this case, the answer will be `Swimming pool`. This means that if a `Guest` i
 
 Since the last argument can be any dimension, one last example question we can ask `Recht` is the following: "What kind of a membership do I need in order to be able to use the `Sauna` on `Mon`?" This call is as follows:
 
-
 ```js
-recht.closest('Guest', 'Mon', 'Sauna', memberships) // 'Regular member'
+recht.closest('Guest', 'Mon', 'Sauna', memberships) // ['Regular member', 'Mon', 'Sauna']
 ```
 
 As you see, Recht is capable of several advanced use cases. The `closest` search is very handy if you are building a feature set and want to guide your users to the right selection for certain features they want.
+
+## Advanced options
+### Functional usage
+Recht can be used as a functional library without instantiation. The following example also works:
+
+```js
+const recht = require('recht')
+
+const memberships = ['Gold Member', 'Regular member', 'Guest']
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+const facilities = ['Swimming pool', 'Gym', 'Sauna']
+
+const dimensions = [memberships, days, facilities]
+
+const rules = [
+  ['ALLOW', 'Gold member', '*', '*'],
+  ['DENY', 'Guest', ['Mon', 'Tue'], 'Sauna'],
+  ['ALLOW', ['Guest', 'Regular member'], '*', '*']
+]
+
+recht.check({ rules }, 'Guest', 'Mon', 'Sauna') // false
+recht.closest({ rules, dimensions }, 'Guest', 'Mon', 'Sauna') // ['Guest, 'Wed', 'Sauna']
+recht.closest({ rules, dimensions }, 'Guest', 'Mon', 'Sauna', facilities) // ['Guest', 'Mon', 'Swimming pool']
+```
+
+Here we didn't have to instantiate a Recht instance and pass in the rules. Instead, we used the statically available `check` and `closest` methods and passed in rules and dimensions as parameters.
+
+### Other methods for closest alternative
+The default `closest` method gives you an array of conditions that shows you exactly which conditions were matched. If you are using some sort of a state management solution, you can directly destruct this array and set it as your state. While this covers most of the use cases, certain other alternatives exist to get the best out of Recht.
+
+`closestValue` gives you the single, simple value that had to change in order to satisfy the condition. This is easier to use than the normal `closest` method in cases where the dimension of this value is known beforehand.
+
+`closestVerbose` gives you a more detailed object that also returns information about the dimension and the dimension index that the change had to take place.
+
+## API Documentation
+### Recht
+Class exposed by `require('recht')`. A concise rule engine to express and enforce rules for selections, permissions and the like.
+#### Example
+```js
+const Recht = require('recht')
+const recht = new Recht()
+```
+#### Instance properties
+##### rules → `Array.<`[`Rule`](#rule)`>`
+`Rule`s define which conditions to `ALLOW` or `DENY`.
+
+##### dimensions → `Array.<`[`Dimension`](#dimension)`>`
+`Dimension`s define the set of possible values for each `Condition` in a [`Rule`](#rule).
+
+#### Instance methods
+##### check(...conditions) → `boolean`
+Check function receives an arbitrary number of conditions. Returns a `boolean` whose value depends on whether the given conditions match the definitions.
+###### Parameters
+*`...conditions`* `...string` Conditions to check if they are allowed within the given rule definition.
+###### Returns
+`boolean` Whether the given condition set is allowed according to the definitions.
+###### Throws
+`Error` Throws if no rules or conditions are provided.
+
+##### closest(...conditions) → [`ConditionsResult`](#conditionsresult)
+Searches for the closest alternative to a given condition. Requires `dimensions` to be set. It recursively searches an alternative starting from a specified dimension. If no dimensions are specified, the starting dimension is always the penultimate dimension. This method returns a set of conditions that is the closest alternative to the given set or null if no matches are found.
+###### Parameters
+*`...conditions`* `...string` Conditions to look for the closest alternative allowed by the `rules` set.
+###### Returns
+[`ConditionsResult`](#conditionsresult) The matching conditions as an array.
+###### Throws
+`Error` Throws if no dimensions are provided.
+
+##### closestValue(...conditions) → [`ValueResult`](#valueresult)
+Searches for the closest alternative to a given condition. Requires `dimensions` to be set. It recursively searches an alternative starting from a specified dimension. If no dimensions are specified, the starting dimension is always the penultimate dimension. This method returns a simple value of a given condition, or null if no matches are found. Since the return value is a simple value, this method is only useful if the dimension is not known beforehand. For more information on the search result, use `closest` or `closestVerbose`.
+###### Parameters
+*`...conditions`* `...string` Conditions to look for the closest alternative allowed by the `rules` set.
+###### Returns
+[`ValueResult`](#valueresult) The matching condition as a simple value.
+###### Throws
+`Error` Throws if no dimensions are provided.
+
+##### closestVerbose(...conditions) → [`VerboseResult`](#verboseresult)
+Searches for the closest alternative to a given condition. Requires `dimensions` to be set. It recursively searches an alternative starting from a specified dimension. If no dimensions are specified, the starting dimension is always the penultimate dimension. This method returns a verbose object (`VerboseResult`) that returns the `dimension`, `dimensionIndex`, `value` and `conditions` that make up the closest alternative.
+###### Parameters
+*`...conditions`* `...string` Conditions to look for the closest alternative allowed by the `rules` set.
+###### Returns
+[`VerboseResult`](#verboseresult) The matching condition as a simple value.
+###### Throws
+`Error` Throws if no dimensions are provided.
+
+#### Static methods
+##### Recht.check(definitions, ...conditions) → `boolean`
+Check function receives a `Definitions` object with `dimensions` and `rules`, and an arbitrary number of conditions. Returns a `boolean` whose value depends on whether the given conditions match the definitions.
+###### Parameters
+*`definitions`* [`Definitions`](#definitions) An object with `dimensions` and `rules`.
+*`...conditions`* `...string` Conditions to check if they are allowed within the given rule definition.
+###### Returns
+`boolean` Whether the given condition set is allowed according to the definitions.
+###### Throws
+`Error` Throws if no rules or conditions are provided.
+
+##### Recht.closest(definitions, ...conditions) → [`ConditionsResult`](#conditionsresult)
+Searches for the closest alternative to a given condition. Requires `dimensions` to be set. It recursively searches an alternative starting from a specified dimension. If no dimensions are specified, the starting dimension is always the penultimate dimension. This method returns a set of conditions that is the closest alternative to the given set or null if no matches are found.
+###### Parameters
+*`definitions`* [`Definitions`](#definitions) An object with `dimensions` and `rules`.
+*`...conditions`* `...string` Conditions to look for the closest alternative allowed by the `rules` set.
+###### Returns
+[`ConditionsResult`](#conditionsresult) The matching conditions as an array.
+###### Throws
+`Error` Throws if no dimensions are provided.
+
+##### Recht.closestValue(definitions, ...conditions) → [`ValueResult`](#valueresult)
+Searches for the closest alternative to a given condition. Requires `dimensions` to be set. It recursively searches an alternative starting from a specified dimension. If no dimensions are specified, the starting dimension is always the penultimate dimension. This method returns a simple value of a given condition, or null if no matches are found. Since the return value is a simple value, this method is only useful if the dimension is not known beforehand. For more information on the search result, use `closest` or `closestVerbose`.
+###### Parameters
+*`definitions`* [`Definitions`](#definitions) An object with `dimensions` and `rules`.
+*`...conditions`* `...string` Conditions to look for the closest alternative allowed by the `rules` set.
+###### Returns
+[`ValueResult`](#valueresult) The matching condition as a simple value.
+###### Throws
+`Error` Throws if no dimensions are provided.
+
+##### Recht.closestVerbose(definitions, ...conditions) → [`VerboseResult`](#verboseresult)
+Searches for the closest alternative to a given condition. Requires `dimensions` to be set. It recursively searches an alternative starting from a specified dimension. If no dimensions are specified, the starting dimension is always the penultimate dimension. This method returns a verbose object (`VerboseResult`) that returns the `dimension`, `dimensionIndex`, `value` and `conditions` that make up the closest alternative.
+###### Parameters
+*`definitions`* [`Definitions`](#definitions) An object with `dimensions` and `rules`.
+*`...conditions`* `...string` Conditions to look for the closest alternative allowed by the `rules` set.
+###### Returns
+[`VerboseResult`](#verboseresult) The matching condition as a simple value.
+###### Throws
+`Error` Throws if no dimensions are provided.
+
+### Type definitions
+This is a list of pseudo-types that are used throughout the documentation.
+
+##### Dimension
+`Array.<string>`
+##### Rule
+`Array.<string>`
+##### Definitions
+`{dimensions: Array.<Dimension>, rules: Array.<Rule>}`
+##### Conditions
+`Array.<string>`
+##### ValueResult
+`string`
+##### ConditionsResult
+`Array.<string>`
+##### VerboseResult
+`{dimension: Dimension, dimensionIndex: number, value: string, conditions: Conditions}`
 
 ## Contribution
 
