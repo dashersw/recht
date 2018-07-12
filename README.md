@@ -35,6 +35,39 @@ recht.check('T-Shirts', 'L', 'Black') // false
 - A/B testing to determine which features are available to which category of users
 - E-commerce applications where some product variants may be unavailable (disabling black shirts only for size S)
 
+## Table of Contents
+* [Features](#features)
+* [Possible use cases](#possible-use-cases)
+* [Usage](#usage)
+    * [Installation](#installation)
+    * [Setting up](#setting-up)
+    * [Defining rules](#defining-rules)
+    * [Checks](#checks)
+    * [Wildcards](#wildcards)
+    * [Dimensions](#dimensions)
+    * [Finding the closest alternatives available](#finding-the-closest-alternatives-available)
+* [Advanced options](#advanced-options)
+    * [Functional usage](#functional-usage)
+    * [Other methods for closest alternative](#other-methods-for-closest-alternative)
+* [API Documentation](#api-documentation)
+    * [Recht](#recht)
+      * [Instance properties](#instance-properties)
+          * [rules](#rules--arrayrule) → Array.<<a href="#rule">Rule</a>>
+          * [dimensions](#dimensions--arraydimension) → Array.<<a href="#dimension">Dimension</a>>
+      * [Instance methods](#instance-methods)
+          * [check(...conditions) → boolean](#checkconditions--boolean)
+          * [closest(...conditions) → <a href="#conditionsresult">ConditionsResult</a>](#closestconditions--conditionsresult)
+          * [closestValue(...conditions) → <a href="#valueresult">ValueResult</a>](#closestvalueconditions--valueresult)
+          * [closestVerbose(...conditions) → <a href="#verboseresult">VerboseResult</a>](#closestverboseconditions--verboseresult)
+      * [Static methods](#static-methods)
+          * [Recht.check(definitions, ...conditions) → boolean](#rechtcheckdefinitions-conditions--boolean)
+          * [Recht.closest(definitions, ...conditions) → <a href="#conditionsresult">ConditionsResult</a>](#rechtclosestdefinitions-conditions--conditionsresult)
+          * [Recht.closestValue(definitions, ...conditions) → <a href="#valueresult">ValueResult</a>](#rechtclosestvaluedefinitions-conditions--valueresult)
+          * [Recht.closestVerbose(definitions, ...conditions) → <a href="#verboseresult">VerboseResult</a>](#rechtclosestverbosedefinitions-conditions--verboseresult)
+    * [Type definitions](#type-definitions)
+* [Contribution](#contribution)
+* [MIT License](#mit-license)
+
 ## Usage
 ### Installation
 Install Recht via npm:
