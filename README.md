@@ -327,19 +327,19 @@ Searches for the closest alternative to a given condition. Requires `dimensions`
 ### Type definitions
 This is a list of pseudo-types that are used throughout the documentation.
 
-##### Dimension
+#### Dimension
 `Array.<string>`
-##### Rule
+#### Rule
 `Array.<string>`
-##### Definitions
+#### Definitions
 `{dimensions: Array.<Dimension>, rules: Array.<Rule>}`
-##### Conditions
+#### Conditions
 `Array.<string>`
-##### ValueResult
+#### ValueResult
 `string`
-##### ConditionsResult
+#### ConditionsResult
 `Array.<string>`
-##### VerboseResult
+#### VerboseResult
 `{dimension: Dimension, dimensionIndex: number, value: string, conditions: Conditions}`
 
 ## Contribution
