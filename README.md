@@ -129,7 +129,7 @@ Read on to [Dimensions](#dimensions) to learn how to constraint the wildcard to 
 Each rule in the rule set should include the same number of conditions in them. In the following example there are 3 conditions in each rule.
 
 ```js
-recht.rules = [  
+recht.rules = [
   ['ALLOW', 'Gold member', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], ['Swimming pool', 'Gym', 'Sauna']],
   ['DENY', 'Guest', ['Mon', 'Tue'], 'Sauna'],
   ['ALLOW', ['Guest', 'Regular member'], '*', '*']
@@ -152,7 +152,7 @@ recht.dimensions = [memberships, days, facilities]
 recht.check('Guest', 'Sat') // false, since Sat isn't included in the days dimension
 ```
 
-The first check passes, because initially we haven't defined the dimensions. As we define the dimensions, the second check fails because `Sat` is not an element in the `days` dimension.
+The first check passes, because initially we haven't defined the dimensions and the rules accept a wildcard for days. As we define the dimensions, the second check fails because `Sat` is not an element in the `days` dimension.
 
 ```js
 recht.dimensions = [memberships, facilities, days]
