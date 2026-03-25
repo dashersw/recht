@@ -139,6 +139,35 @@ describe('Recht', () => {
     expect(() => Recht.closest(undefined, 'test')).toThrowError('Please provide a dimensions array in order to use the closest method.')
   })
 
+  it('Closest handles a single-dimension ruleset without stack overflow', () => {
+    const dimensions = [['read', 'write', 'admin']] as const
+    const rules = [['ALLOW', 'read'], ['ALLOW', 'write']] as const
+
+    const recht = new Recht({ dimensions, rules })
+
+    expect(recht.closest('admin')).toEqual(['read'])
+    expect(recht.closestValue('admin')).toBe('read')
+
+    expect(Recht.closest({ rules, dimensions }, 'admin')).toEqual(['read'])
+    expect(Recht.closestValue({ rules, dimensions }, 'admin')).toBe('read')
+  })
+
+  it('Closest returns null for a single-dimension ruleset with no match', () => {
+    const dimensions = [['read', 'write']] as const
+    const rules = [['DENY', '*']] as const
+
+    const recht = new Recht({ dimensions, rules })
+
+    expect(recht.closest('read')).toBeNull()
+    expect(recht.closestValue('read')).toBeNull()
+    expect(recht.closestVerbose('read')).toEqual({
+      dimension: null,
+      dimensionIndex: null,
+      value: null,
+      conditions: null
+    })
+  })
+
   it('Closest functions throw if no dimensions are set', () => {
     const fns = [Recht.closest, Recht.closestValue, Recht.closestVerbose] as const
 
