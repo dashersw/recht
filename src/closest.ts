@@ -54,13 +54,13 @@ export function closest (
     }
 
     checkConditions[dimensionIndex] = oldValue
+  }
 
-    if (dimensionIndex === 0) {
-      if (mode === 'verbose') {
-        return { dimension: null, dimensionIndex: null, value: null, conditions: null }
-      }
-      return null
+  if (dimensionIndex === 0) {
+    if (mode === 'verbose') {
+      return { dimension: null, dimensionIndex: null, value: null, conditions: null }
     }
+    return null
   }
 
   return closest(recht, mode, ...conditions, dimensions[dimensionIndex - 1])
