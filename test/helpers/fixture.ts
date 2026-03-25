@@ -1,10 +1,10 @@
-const categories = ['Men', 'Women', 'Kids']
-const garments = ['Shirts', 'Jackets']
-const sizes = ['XS', 'S', 'M', 'L', 'XL']
-const colors = ['Brown', 'Black', 'Green', 'White']
-const dimensions = [categories, garments, sizes, colors]
+export const categories = ['Men', 'Women', 'Kids'] as const
+export const garments = ['Shirts', 'Jackets'] as const
+export const sizes = ['XS', 'S', 'M', 'L', 'XL'] as const
+export const colors = ['Brown', 'Black', 'Green', 'White'] as const
+export const dimensions = [categories, garments, sizes, colors] as const
 
-const rules = [
+export const rules = [
   ['DENY', 'Men', '*', 'XS'],
   ['DENY', '*', '*', '*', 'Brown'],
   ['DENY', ['Women', 'Kids'], '*', 'XL'],
@@ -13,9 +13,9 @@ const rules = [
   ['DENY', 'Men', 'Shirts', ['S', 'M'], 'Black'],
   ['ALLOW', 'Men', 'Shirts', ['L', 'XL'], 'Black'],
   ['ALLOW', 'Men', 'Jackets', ['S', 'XL'], 'Black']
-]
+] as const
 
-const checkAssertions = [
+export const checkAssertions = [
   { input: ['Men', 'Shirts', 'XS', 'Black'], expected: { value: false } },
   { input: ['Men', 'Shirts', 'S', 'Black'], expected: { value: false } },
   { input: ['Men', 'Shirts', 'S', 'Green'], expected: { value: true } },
@@ -26,9 +26,9 @@ const checkAssertions = [
   { input: ['Kids', 'Shirts'], expected: { value: true } },
   { input: ['Kids', 'Jackets', 'M', 'Green'], expected: { value: false } },
   { input: ['Kids', 'Shirts', 'M', 'Black'], expected: { value: true } }
-]
+] as const
 
-const closestAssertions = [
+export const closestAssertions = [
   {
     input: ['Men', 'Shirts', 'S', 'Black'],
     expected: {
@@ -92,15 +92,5 @@ const closestAssertions = [
       dimensionIndex: null
     }
   }
-]
+] as const
 
-module.exports = {
-  categories,
-  garments,
-  sizes,
-  colors,
-  dimensions,
-  rules,
-  checkAssertions,
-  closestAssertions
-}

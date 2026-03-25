@@ -2,18 +2,23 @@
   "name": "recht",
   "version": "2.0.0",
   "description": "A concise rule engine to express and enforce rules for selections, permissions and the like",
-  "main": "index.js",
-  "scripts": {
-    "coverage": "nyc report",
-    "test": "nyc --check-coverage --lines 100 ava --verbose",
-    "lint": "eslint .",
-    "lint-fix": "eslint --fix .",
-    "prepublishOnly": "npm run lint"
+  "type": "module",
+  "main": "./cjs-entry.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./cjs-entry.cjs"
+    }
   },
-  "precommit": [
-    "lint",
-    "test"
-  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest --watch"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dashersw/recht.git"
@@ -34,22 +39,10 @@
   },
   "homepage": "https://github.com/dashersw/recht#readme",
   "devDependencies": {
-    "ava": "^0.25.0",
-    "coveralls": "^3.0.2",
-    "eslint": "^5.1.0",
-    "eslint-config-standard": "^12.0.0-alpha.0",
-    "eslint-plugin-import": "^2.13.0",
-    "eslint-plugin-node": "^6.0.1",
-    "eslint-plugin-promise": "^3.8.0",
-    "eslint-plugin-standard": "^3.1.0",
-    "nyc": "^12.0.2",
-    "pre-commit": "^1.2.2"
-  },
-  "eslintConfig": {
-    "extends": "standard",
-    "rules": {
-      "eqeqeq": "off"
-    }
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.4"
   },
   "dependencies": {}
 }
