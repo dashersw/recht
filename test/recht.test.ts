@@ -152,6 +152,31 @@ describe('Recht', () => {
     expect(Recht.closestValue({ rules, dimensions }, 'admin')).toBe('read')
   })
 
+  it('Closest tries all values in dimension 0 before returning null', () => {
+    const dimensions = [['a', 'b', 'c']] as const
+    const rules = [['ALLOW', 'c']] as const
+
+    const recht = new Recht({ dimensions, rules })
+
+    expect(recht.closest('a')).toEqual(['c'])
+    expect(recht.closestValue('a')).toBe('c')
+    expect(recht.closestVerbose('a')).toEqual({
+      dimension: dimensions[0],
+      dimensionIndex: 0,
+      value: 'c',
+      conditions: ['c']
+    })
+
+    expect(Recht.closest({ rules, dimensions }, 'a')).toEqual(['c'])
+    expect(Recht.closestValue({ rules, dimensions }, 'a')).toBe('c')
+    expect(Recht.closestVerbose({ rules, dimensions }, 'a')).toEqual({
+      dimension: dimensions[0],
+      dimensionIndex: 0,
+      value: 'c',
+      conditions: ['c']
+    })
+  })
+
   it('Closest returns null for a single-dimension ruleset with no match', () => {
     const dimensions = [['read', 'write']] as const
     const rules = [['DENY', '*']] as const
