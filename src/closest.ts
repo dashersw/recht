@@ -33,7 +33,10 @@ export function closest (
     : -1
 
   if (dimensionIndex === -1) {
-    return closest(recht, mode, ...conditions, dimensions[dimensions.length - 2])
+    const fallbackDimension = dimensions.length === 1
+      ? dimensions[0]
+      : dimensions[dimensions.length - 2]
+    return closest(recht, mode, ...conditions, fallbackDimension)
   }
 
   const dimension = conditions.pop() as readonly string[]
