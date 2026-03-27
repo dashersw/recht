@@ -8,13 +8,17 @@
 
 **Das Recht enables you to customize your application's behavior based on simple rules, without the need of a database or an expensive query engine.**
 
-```js
-const recht = new Recht()
-recht.rules = [
-  ['DENY', 'T-shirts', 'S', ['Black', 'Blue']],
-  ['DENY', 'T-shirts', ['M', 'L'], 'Black'],
-  ['ALLOW', 'T-shirts', '*', '*']
-]
+```ts
+import Recht from 'recht'
+
+const recht = new Recht({
+  dimensions: [['T-shirts', 'T-Shirts'], ['S', 'M', 'L'], ['Black', 'Blue']] as const,
+  rules: [
+    ['DENY', 'T-shirts', 'S', ['Black', 'Blue']],
+    ['DENY', 'T-shirts', ['M', 'L'], 'Black'],
+    ['ALLOW', 'T-shirts', '*', '*']
+  ] as const
+})
 
 recht.check('T-shirts', 'S', 'Black') // false
 recht.check('T-shirts', 'M', 'Blue') // true
@@ -66,6 +70,7 @@ recht.check('T-Shirts', 'L', 'Black') // false
           * [Recht.closestVerbose(definitions, ...conditions) → <a href="#verboseresult">VerboseResult</a>](#rechtclosestverbosedefinitions-conditions--verboseresult)
     * [Type definitions](#type-definitions)
 * [Contribution](#contribution)
+* [Migrating from v1](#migrating-from-v1)
 * [MIT License](#mit-license)
 
 ## Usage
@@ -78,8 +83,9 @@ $ npm install recht
 ### Setting up
 Require and instantiate Recht.
 
-```js
-const Recht = require('recht')
+```ts
+import Recht from 'recht'
+
 const recht = new Recht()
 ```
 
@@ -88,27 +94,33 @@ Recht accepts an array of rules, which are arrays of conditions in themselves. A
 
 If a condition matches an `ALLOW` rule, the check will return `true`. If a condition matches a `DENY` rule, the check will return `false`. Recht will go through the rules in the `rules` array one by one in the order of declaration, and return as soon as any of the rules match. Therefore, the order of the rules are very important. If there's no match, the check will fail and return `false`.
 
-```js
-const Recht = require('recht')
-const recht = new Recht()
+```ts
+import Recht from 'recht'
 
-recht.rules = [
-  ['ALLOW', ['Master', 'Developer'], 'push', '*'], // allow masters & developers to push to any branch
-  ['ALLOW', 'Master', 'force push', 'master'], // allow masters to force push to the master branch
-  ['DENY', 'QA', 'clone', 'production'], // disallow QA from cloning production
-  ['ALLOW', '*', 'clone'], // allow anyone to clone any branch
-]
+const recht = new Recht({
+  dimensions: [
+    ['Master', 'Developer', 'QA'],
+    ['push', 'force push', 'clone'],
+    ['master', 'production']
+  ] as const,
+  rules: [
+    ['ALLOW', ['Master', 'Developer'], 'push', '*'], // allow masters & developers to push to any branch
+    ['ALLOW', 'Master', 'force push', 'master'], // allow masters to force push to the master branch
+    ['DENY', 'QA', 'clone', 'production'], // disallow QA from cloning production
+    ['ALLOW', '*', 'clone'] // allow anyone to clone any branch (prefix rule)
+  ] as const
+})
 ```
 
 ### Checks
 
 Once you define your rules, you can check any condition against them with the `check` method. The following example checks if the `'Developer'` can `'push'` to `'master'`.
-```js
+```ts
 recht.check('Developer', 'push', 'master')
 ```
 
 If you are only interested whether a `'Developer'` can push to any branch at all, you can omit the last argument and call the `check` function with only two arguments as the following:
-```js
+```ts
 recht.check('Developer', 'push')
 ```
 
@@ -117,7 +129,7 @@ This feature is useful for checking group matches or hierarchical structures. It
 ### Wildcards
 Recht accepts `'*'` as a wildcard condition. In this case, any value for that condition will be accepted as a match. The following example gives anybody clone access to any branch.
 
-```js
+```ts
 recht.rules = [
   ['ALLOW', '*', 'clone']
 ]
@@ -128,7 +140,7 @@ Read on to [Dimensions](#dimensions) to learn how to constraint the wildcard to 
 ### Dimensions
 Each rule in the rule set should include the same number of conditions in them. In the following example there are 3 conditions in each rule.
 
-```js
+```ts
 recht.rules = [
   ['ALLOW', 'Gold member', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], ['Swimming pool', 'Gym', 'Sauna']],
   ['DENY', 'Guest', ['Mon', 'Tue'], 'Sauna'],
@@ -138,15 +150,26 @@ recht.rules = [
 
 The set of possible values for a condition is called a dimension. The first dimension is the membership type, the second dimension is the facilities a member has access to, and the last one is the days the the facilities can be used. These dimensions can be expressed as follows:
 
-```js
-const memberships = ['Gold member', 'Regular member', 'Guest']
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const facilities = ['Swimming pool', 'Gym', 'Sauna']
+```ts
+const memberships = ['Gold member', 'Regular member', 'Guest'] as const
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
+const facilities = ['Swimming pool', 'Gym', 'Sauna'] as const
+```
+
+If you're using TypeScript and want autocomplete for `recht.check(...)`, define `dimensions` as literal tuples (`as const`) so argument positions become unions:
+
+```ts
+const recht = new Recht({
+  dimensions: [['Gold member', 'Regular member', 'Guest']] as const,
+  rules: [['ALLOW', '*']] as const,
+})
+
+recht.check('Gold member') // autocomplete suggests: 'Gold member' | 'Regular member' | 'Guest'
 ```
 
 If these values are known ahead of time and passed to Recht, Recht opens up two further features. The first one is constraining the wildcard: without defining dimensions, a wildcard accepts any arbitrary value, and this might be an unwanted case. The following example uses dimensions to constrain the wildcard to known values:
 
-```js
+```ts
 recht.check('Guest', 'Sat') // true, since no dimensions are defined yet
 recht.dimensions = [memberships, days, facilities]
 recht.check('Guest', 'Sat') // false, since Sat isn't included in the days dimension
@@ -154,7 +177,7 @@ recht.check('Guest', 'Sat') // false, since Sat isn't included in the days dimen
 
 The first check passes, because initially we haven't defined the dimensions and the rules accept a wildcard for days. As we define the dimensions, the second check fails because `Sat` is not an element in the `days` dimension.
 
-```js
+```ts
 recht.dimensions = [memberships, facilities, days]
 recht.check('')
 ```
@@ -163,24 +186,24 @@ recht.check('')
 
 Once you have defined [dimensions](#dimensions), Recht can be used to predict the closest choice available. This is a very handy feature if you want to show what is possible for a given rule set. See the following example on how to make the best of this feature:
 
-```js
-const Recht = require('recht')
-const recht = new Recht()
+```ts
+import Recht from 'recht'
 
-const memberships = ['Gold Member', 'Regular member', 'Guest']
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const facilities = ['Swimming pool', 'Gym', 'Sauna']
+const memberships = ['Gold member', 'Regular member', 'Guest'] as const
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
+const facilities = ['Swimming pool', 'Gym', 'Sauna'] as const
 
-recht.dimensions = [memberships, days, facilities]
-
-recht.rules = [
-  ['ALLOW', 'Gold member', '*', '*'],
-  ['DENY', 'Guest', ['Mon', 'Tue'], 'Sauna'],
-  ['ALLOW', ['Guest', 'Regular member'], '*', '*']
-]
+const recht = new Recht({
+  dimensions: [memberships, days, facilities] as const,
+  rules: [
+    ['ALLOW', 'Gold member', '*', '*'],
+    ['DENY', 'Guest', ['Mon', 'Tue'], 'Sauna'],
+    ['ALLOW', ['Guest', 'Regular member'], '*', '*']
+  ] as const
+})
 
 recht.check('Guest', 'Mon', 'Sauna') // false
-recht.closest('Guest', 'Mon', 'Sauna') // ['Guest, 'Wed', 'Sauna']
+recht.closest('Guest', 'Mon', 'Sauna') // ['Guest', 'Wed', 'Sauna']
 recht.closest('Guest', 'Mon', 'Sauna', facilities) // ['Guest', 'Mon', 'Swimming pool']
 ```
 
@@ -192,7 +215,7 @@ In this case, the answer will be `Swimming pool`. This means that if a `Guest` i
 
 Since the last argument can be any dimension, one last example question we can ask `Recht` is the following: "What kind of a membership do I need in order to be able to use the `Sauna` on `Mon`?" This call is as follows:
 
-```js
+```ts
 recht.closest('Guest', 'Mon', 'Sauna', memberships) // ['Regular member', 'Mon', 'Sauna']
 ```
 
@@ -202,24 +225,24 @@ As you see, Recht is capable of several advanced use cases. The `closest` search
 ### Functional usage
 Recht can be used as a functional library without instantiation. The following example also works:
 
-```js
-const recht = require('recht')
+```ts
+import Recht from 'recht'
 
-const memberships = ['Gold Member', 'Regular member', 'Guest']
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const facilities = ['Swimming pool', 'Gym', 'Sauna']
+const memberships = ['Gold member', 'Regular member', 'Guest'] as const
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
+const facilities = ['Swimming pool', 'Gym', 'Sauna'] as const
 
-const dimensions = [memberships, days, facilities]
+const dimensions = [memberships, days, facilities] as const
 
 const rules = [
   ['ALLOW', 'Gold member', '*', '*'],
   ['DENY', 'Guest', ['Mon', 'Tue'], 'Sauna'],
   ['ALLOW', ['Guest', 'Regular member'], '*', '*']
-]
+] as const
 
-recht.check({ rules }, 'Guest', 'Mon', 'Sauna') // false
-recht.closest({ rules, dimensions }, 'Guest', 'Mon', 'Sauna') // ['Guest, 'Wed', 'Sauna']
-recht.closest({ rules, dimensions }, 'Guest', 'Mon', 'Sauna', facilities) // ['Guest', 'Mon', 'Swimming pool']
+Recht.check({ rules }, 'Guest', 'Mon', 'Sauna') // false
+Recht.closest({ rules, dimensions }, 'Guest', 'Mon', 'Sauna') // ['Guest', 'Wed', 'Sauna']
+Recht.closest({ rules, dimensions }, 'Guest', 'Mon', 'Sauna', facilities) // ['Guest', 'Mon', 'Swimming pool']
 ```
 
 Here we didn't have to instantiate a Recht instance and pass in the rules. Instead, we used the statically available `check` and `closest` methods and passed in rules and dimensions as parameters.
@@ -233,10 +256,11 @@ The default `closest` method gives you an array of conditions that shows you exa
 
 ## API Documentation
 ### Recht
-Class exposed by `require('recht')`. A concise rule engine to express and enforce rules for selections, permissions and the like.
+Class exposed by `import Recht from 'recht'` (or `require('recht')` for CommonJS). A concise rule engine to express and enforce rules for selections, permissions and the like.
 #### Example
-```js
-const Recht = require('recht')
+```ts
+import Recht from 'recht'
+
 const recht = new Recht()
 ```
 #### Instance properties
@@ -325,22 +349,35 @@ Searches for the closest alternative to a given condition. Requires `dimensions`
 `Error` Throws if no dimensions are provided.
 
 ### Type definitions
-This is a list of pseudo-types that are used throughout the documentation.
+Recht ships with TypeScript types. You can import them like this:
+
+```ts
+import type { Action, Dimension, Dimensions, Rule, Definitions, ValueResult, ConditionsResult, VerboseResult } from 'recht'
+```
+
+#### Action
+`'ALLOW' | 'DENY'`
 
 #### Dimension
-`Array.<string>`
+`readonly string[]`
+
+#### Dimensions
+`readonly Dimension[]`
+
 #### Rule
-`Array.<string>`
+`Rule<D extends Dimensions = Dimensions>`
+
 #### Definitions
-`{dimensions: Array.<Dimension>, rules: Array.<Rule>}`
-#### Conditions
-`Array.<string>`
+`Definitions<D extends Dimensions = Dimensions>`
+
 #### ValueResult
-`string`
+`string | null`
+
 #### ConditionsResult
-`Array.<string>`
+`readonly string[] | null`
+
 #### VerboseResult
-`{dimension: Dimension, dimensionIndex: number, value: string, conditions: Conditions}`
+`{ dimension: readonly string[] | null; dimensionIndex: number | null; value: string | null; conditions: readonly string[] | null }`
 
 ## Contribution
 
@@ -349,6 +386,52 @@ Recht is under development, and is open to suggestions and contributions.
 If you would like to see a feature implemented or want to contribute a new feature, you are welcome to open an issue to discuss it and we will be more than happy to help.
 
 If you choose to make a contribution, please fork this repository, work on a feature and submit a pull request.
+
+## Migrating from v1
+
+This package is now **TypeScript-first** and **ESM-first**, while preserving the classic runtime API.
+
+### Imports (ESM and CommonJS)
+
+ESM:
+
+```ts
+import Recht from 'recht'
+```
+
+CommonJS still works:
+
+```ts
+const Recht = require('recht')
+```
+
+### TypeScript usage (recommended)
+
+For autocomplete and stricter checks, provide `dimensions` and `rules` as `as const` literals:
+
+```ts
+import Recht from 'recht'
+
+const recht = new Recht({
+  dimensions: [['Admin', 'User'], ['read', 'write']] as const,
+  rules: [['ALLOW', 'Admin', '*']] as const,
+})
+
+recht.check('Admin', 'read')
+```
+
+### Instance vs static APIs
+
+The runtime API is unchanged:
+
+- Instance: `recht.check(...)`, `recht.closest(...)`, `recht.closestValue(...)`, `recht.closestVerbose(...)`
+- Static: `Recht.check({ rules, dimensions }, ...)`, `Recht.closest({ rules, dimensions }, ...)`, etc.
+
+### Tooling / requirements
+
+- Node.js >= 18 recommended
+- Build uses `tsup`
+- Tests use `vitest`
 
 ## MIT License
 
